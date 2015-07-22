@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>IC-Onsim by itraveribon</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>IC-Onsim</h1>
+          <h2>Extension of the similarity measure OnSim with Information Content</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/itraveribon/ICOnSim/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/itraveribon/ICOnSim/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/itraveribon/ICOnSim" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a id="ic-onsim" class="anchor" href="#ic-onsim" aria-hidden="true"><span class="octicon octicon-link"></span></a>IC-OnSim</h1>
+
+<p>Extension of the similarity measure OnSim with Information Content. A Similarity Measure for Determining Relatedness Between Ontology Terms.</p>
+
+<p>[1] Ignacio Traverso-Ribón, Maria-Esther Vidal and Guillermo Palma. A Similarity Measure for Determining Relatedness Between Ontology Terms. 11th  International Conference on Data Integration in the Life Sciences 2015 (DILS2015).</p>
+
+<p>[2] Ignacio Traverso-Ribón, Maria-Esther Vidal. Exploiting Information Content and Semantics to Accurately Computing Similarity of GO-based Annotated Entities. 2015 IEEE Conference on Computational Intelligence in Bioinformatics and Computational Biology</p>
+
+<p>[3] Palma, G.; Vidal, M. E.; Haag, E.; Raschid, L.; Thor, A. Measuring Relatedness Between Scientific Entities in Annotation Datasets. ACM International Conference on Bioinformatics, Computational Biology, and Biomedical Informatics (BCB), 2013</p>
+
+<h1>
+<a id="setting-up-annsim-onsim" class="anchor" href="#setting-up-annsim-onsim" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setting up AnnSim-OnSim</h1>
+
+<p>Once you have downloaded the code from GitHub you only need to modify the file src/main/java/test/DatasetTest.java to run AnnSim-OnSim.</p>
+
+<p>IC-OnSim need as inputs:</p>
+
+<ul>
+<li>An OWL Ontology.</li>
+<li>A file describing the comparisons to be performed.</li>
+<li>A file for each entity containing their annotations.</li>
+</ul>
+
+<h2>
+<a id="comparison-file" class="anchor" href="#comparison-file" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparison file</h2>
+
+<p>The comparison file follows the following format:</p>
+
+<pre><code>ENTITY1 ENTITY2
+ENTITY1 ENTITY3
+ENTITY3 ENTITY4
+</code></pre>
+
+<p>Each line represents a pair of entities to be compared. These entities can be, e.g., proteins. In this case, the file will look like this:</p>
+
+<pre><code>Q9JKJ9  Q9NYL5
+Q9JKJ9  Q60991
+Q9JKJ9  Q64505
+Q9JKJ9  P11511
+Q9JKJ9  P27786
+</code></pre>
+
+<h2>
+<a id="annotation-files" class="anchor" href="#annotation-files" aria-hidden="true"><span class="octicon octicon-link"></span></a>Annotation files</h2>
+
+<p>For each entity present in the comparison file, AnnSim-OnSim needs a file containing its annotations. The annotations are terms from the given ontology. In case our entities are proteins annotated with the Gene Ontology, the file would look like this:</p>
+
+<pre><code>3
+GO:0045454
+GO:0006467
+GO:0055114
+</code></pre>
+
+<p>The first line contains the number of annotations included in the file and each annotations is written in a different line.</p>
+
+<h2>
+<a id="main-example" class="anchor" href="#main-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Main example</h2>
+
+<pre><code>Map&lt;String, String&gt; ontPrefix = new HashMap&lt;String,String&gt;();
+    ontPrefix.put("src/main/resources/dataset3/", "http://purl.org/obo/owl/GO#");
+    String prefix = "src/main/resources/dataset3/";
+    String ontFile = prefix + "goProtein/go.owl"; // File containing the OWL Ontology
+
+    MyOWLOntology o = new MyOWLOntology(ontFile, ontPrefix.get(prefix));
+    String comparisonFile = "src/main/resources/dataset3/proteinpairs.txt"; // File containing the entity pairs to be compared.
+
+    List&lt;ComparisonResult&gt; comparisons = readComparisonFile(comparisonFile);
+    int counter = 0, total = comparisons.size();
+
+    String[] files = {"src/main/resources/dataset3/process_annt"}; //Folder containing the annotations files
+
+    for (Iterator&lt;ComparisonResult&gt; i = comparisons.iterator(); i.hasNext();)
+    {
+        ComparisonResult comp = i.next();
+        double sim = 0;
+        for (String file:files)
+        {
+            Set&lt;OWLConcept&gt; a = getConceptAnnotations(comp.getConceptA(), file, o);
+            Set&lt;OWLConcept&gt; b = getConceptAnnotations(comp.getConceptB(), file, o);
+            AnnSim bpm = new AnnSim();
+            double aux = bpm.matching(a, b, null, null); 
+            String s = comp.getConceptA() + "\t" + comp.getConceptB() + "\t" + aux;
+            sim += aux;
+        }
+        comp.setSimilarity(sim/files.length);
+        System.out.println(comp + "\t" + counter++ + "/" + total);
+    }
+</code></pre>
+
+<h1>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h1>
+
+<p>This work is licensed under <a href="https://www.gnu.org/licenses/gpl-2.0.html">GNU/GPL v2</a>.</p>
+        </section>
+
+        <footer>
+          IC-Onsim is maintained by <a href="https://github.com/itraveribon">itraveribon</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+                  <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-65418952-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+      </div>
+    </div>
+  </body>
+</html>
