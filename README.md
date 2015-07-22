@@ -1,4 +1,4 @@
-# ICOnSim
+# IC-OnSim
 Extension of the similarity measure OnSim with Information Content. A Similarity Measure for Determining Relatedness Between Ontology Terms.
 
 [1] Ignacio Traverso-Ribón, Maria-Esther Vidal and Guillermo Palma. A Similarity Measure for Determining Relatedness Between Ontology Terms. 11th  International Conference on Data Integration in the Life Sciences 2015 (DILS2015).
